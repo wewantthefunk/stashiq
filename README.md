@@ -188,7 +188,7 @@ stashiq/
 | Users | `GET/POST /api/users`, `POST /api/users/{id}/resend-invite`, `PATCH/DELETE /api/users/{id}` (admin) |
 | Locations | `GET/POST /api/locations`, `DELETE /api/locations/{id}` |
 | Bins | `GET/POST /api/bins`, `PATCH/DELETE /api/bins/{id}`, `GET /api/bins/{id}`, `GET /api/bins/{id}/qr` (`?location_id=` on list; delete requires empty bin) |
-| Items | `GET/POST /api/items` |
+| Items | `GET/POST /api/items`, `PATCH /api/items/{id}` (admin) |
 | Actions | `GET/POST /api/actions`, `DELETE /api/actions/{id}` |
 | Inventory | `POST /api/bins/{id}/adjust` (requires `action_id`) |
 | Logs | `GET /api/logs?bin_id=&user_id=` |

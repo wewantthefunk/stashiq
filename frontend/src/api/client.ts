@@ -10,6 +10,7 @@ import type {
   InventoryLog,
   ItemBinSearchHit,
   ItemCreate,
+  ItemUpdate,
   PublicConfig,
   AcceptInvitePayload,
   ActionCreate,
@@ -268,6 +269,17 @@ export function listItems(token: string) {
 export function createItem(payload: ItemCreate, token: string) {
   return request<Item>("/api/items", {
     method: "POST",
+    body: JSON.stringify(payload),
+  }, token);
+}
+
+export function updateItem(
+  itemId: string,
+  payload: ItemUpdate,
+  token: string,
+) {
+  return request<Item>(`/api/items/${encodeURIComponent(itemId)}`, {
+    method: "PATCH",
     body: JSON.stringify(payload),
   }, token);
 }

@@ -95,6 +95,12 @@ export type ItemCreate = {
   sku?: string | null;
 };
 
+export type ItemUpdate = {
+  name?: string;
+  category?: string;
+  sku?: string | null;
+};
+
 export type ItemBinSearchHit = {
   bin_id: string;
   bin_name: string;

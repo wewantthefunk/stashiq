@@ -154,6 +154,12 @@ class ItemCreate(BaseModel):
     sku: str | None = None
 
 
+class ItemUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    category: str | None = Field(default=None, min_length=1, max_length=128)
+    sku: str | None = None
+
+
 class ItemRead(BaseModel):
     id: UUID
     name: str
