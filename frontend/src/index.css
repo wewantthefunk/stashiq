@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  @apply bg-slate-950 text-slate-100 antialiased;
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .label-page {
+    background: white !important;
+  }
+
+  /* Bin QR labels: 2 per 8.5×11 sheet (cut horizontally); single-bin uses same slot size */
+  @page label-letter {
+    size: letter;
+    margin: 0.35in;
+  }
+
+  .bulk-labels-print {
+    page: label-letter;
+  }
+
+  .bulk-label-slot {
+    min-height: 5.1in;
+    page-break-inside: avoid;
+  }
+
+  .bulk-label-page-break {
+    page-break-after: always;
+  }
+
+  .bulk-labels-grid .bulk-label-slot:last-child {
+    page-break-after: auto;
+  }
+
+  /* Bin inventory lists (letter) */
+  @page inventory-list {
+    size: letter;
+    margin: 0.6in;
+  }
+
+  .inventory-print-page {
+    page: inventory-list;
+  }
+
+  .bin-inventory-page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .bin-inventory-block {
+    padding-bottom: 0.5in;
+  }
+
+  .bin-inventory-block header {
+    page-break-after: avoid;
+    break-after: avoid-page;
+  }
+}
+
+@media screen {
+  .bulk-label-slot {
+    min-height: 14rem;
+    margin-bottom: 1rem;
+  }
+}

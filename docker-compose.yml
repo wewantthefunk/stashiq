@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stashiq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stashiq}
+      POSTGRES_DB: ${POSTGRES_DB:-stashiq}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stashiq -d stashiq"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${DB_HOST_PORT:-5433}:5432"
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-stashiq}:${POSTGRES_PASSWORD:-stashiq}@db:5432/${POSTGRES_DB:-stashiq}}
+      JWT_SECRET: ${JWT_SECRET:-dev-change-me-in-production}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      LAN_IP: ${LAN_IP:-}
+      FRONTEND_HOST_PORT: ${FRONTEND_HOST_PORT:-3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      CORS_ALLOW_ALL: ${CORS_ALLOW_ALL:-true}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+    ports:
+      - "${BACKEND_HOST_PORT:-8001}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_PROXY_TARGET: ${VITE_PROXY_TARGET:-http://backend:8000}
+      VITE_DISABLE_HMR: ${VITE_DISABLE_HMR:-1}
+      VITE_HMR_HOST: ${LAN_IP:-}
+    ports:
+      - "${FRONTEND_HOST_PORT:-3000}:3000"
+    # Built app + vite preview — stable for phones (no dev WebSocket)
+    command:
+      [
+        "sh",
+        "-c",
+        "npm run build && npm run preview -- --host 0.0.0.0 --port 3000",
+      ]
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

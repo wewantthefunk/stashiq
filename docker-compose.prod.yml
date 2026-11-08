@@ -1,0 +1,22 @@
+# Production overlay: no bind mounts, no uvicorn --reload, run beside docker-compose.yml
+#
+#   ./scripts/compose-prod.sh up --build -d
+#
+services:
+  backend:
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+      ]
+    restart: unless-stopped
+
+  frontend:
+    restart: unless-stopped
+
+  db:
+    restart: unless-stopped

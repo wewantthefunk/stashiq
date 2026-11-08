@@ -1,0 +1,6 @@
+# Laptop-only: Vite dev server + hot reload (avoid for phone testing).
+services:
+  frontend:
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+    environment:
+      VITE_DISABLE_HMR: "0"

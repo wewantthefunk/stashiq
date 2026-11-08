@@ -1,0 +1,10 @@
+# Live source mounts for laptop/LAN dev (used by ./scripts/compose-up.sh — not production).
+services:
+  backend:
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
