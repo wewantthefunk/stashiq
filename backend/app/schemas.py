@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class Token(BaseModel):
@@ -97,9 +97,42 @@ class UserCreate(BaseModel):
     role: str = Field(pattern="^(admin|operator)$")
 
 
+class ActionCreate(BaseModel):
+    id: str = Field(min_length=1, max_length=32)
+    name: str = Field(min_length=1, max_length=255)
+
+
+class ActionRead(BaseModel):
+    id: str
+    name: str
+
+    model_config = {"from_attributes": True}
+
+
+class LocationCreate(BaseModel):
+    id: str = Field(min_length=1, max_length=32)
+    name: str = Field(min_length=1, max_length=255)
+    address: str = Field(min_length=1, max_length=512)
+
+
+class LocationRead(BaseModel):
+    id: str
+    name: str
+    address: str
+
+    model_config = {"from_attributes": True}
+
+
 class BinCreate(BaseModel):
     id: str = Field(min_length=1, max_length=32)
     name: str = Field(min_length=1, max_length=255)
+    location_notes: str | None = None
+    location_id: str | None = None
+
+
+class BinUpdate(BaseModel):
+    location_id: str | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=255)
     location_notes: str | None = None
 
 
@@ -107,7 +140,10 @@ class BinSummary(BaseModel):
     id: str
     name: str
     location_notes: str | None
+    location_id: str | None
+    location: LocationRead | None = None
     updated_at: datetime
+    is_empty: bool = True
 
     model_config = {"from_attributes": True}
 
@@ -140,7 +176,15 @@ class BinDetail(BinSummary):
 class InventoryAdjust(BaseModel):
     item_id: UUID
     change_amount: int
+    action_id: str = Field(min_length=1, max_length=32)
     notes: str | None = None
+
+    @field_validator("change_amount")
+    @classmethod
+    def change_must_be_nonzero(cls, value: int) -> int:
+        if value == 0:
+            raise ValueError("change_amount must not be zero")
+        return value
 
 
 class InventoryLogRead(BaseModel):
@@ -160,6 +204,8 @@ class InventoryLogRead(BaseModel):
 class ItemBinSearchHit(BaseModel):
     bin_id: str
     bin_name: str
+    location_id: str | None
+    location_name: str | None
     item: ItemRead
     quantity: int
 
@@ -168,6 +214,8 @@ class InventoryLogView(BaseModel):
     id: UUID
     bin_id: str
     bin_name: str
+    action_id: str | None
+    action_name: str | None
     item_id: UUID
     item_name: str
     user_id: UUID

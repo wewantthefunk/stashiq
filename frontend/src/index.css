@@ -71,6 +71,20 @@ body {
     page-break-after: avoid;
     break-after: avoid-page;
   }
+
+  .location-bins-page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .location-bins-block {
+    padding-bottom: 0.5in;
+  }
+
+  .location-bins-block header {
+    page-break-after: avoid;
+    break-after: avoid-page;
+  }
 }
 
 @media screen {

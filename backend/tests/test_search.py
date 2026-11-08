@@ -2,7 +2,7 @@ from app.auth import hash_password
 from app.models import User
 
 
-def test_search_finds_bins_with_matching_item(client, db_session):
+def test_search_finds_bins_with_matching_item(client, db_session, inventory_action):
     admin = User(
         username="searchadmin",
         password_hash=hash_password("secret123"),
@@ -32,17 +32,29 @@ def test_search_finds_bins_with_matching_item(client, db_session):
 
     client.post(
         f"/api/bins/B1/adjust",
-        json={"item_id": ball["id"], "change_amount": 5},
+        json={
+            "item_id": ball["id"],
+            "change_amount": 5,
+            "action_id": inventory_action,
+        },
         headers=headers,
     )
     client.post(
         f"/api/bins/B2/adjust",
-        json={"item_id": ball["id"], "change_amount": 12},
+        json={
+            "item_id": ball["id"],
+            "change_amount": 12,
+            "action_id": inventory_action,
+        },
         headers=headers,
     )
     client.post(
         f"/api/bins/B1/adjust",
-        json={"item_id": cone["id"], "change_amount": 3},
+        json={
+            "item_id": cone["id"],
+            "change_amount": 3,
+            "action_id": inventory_action,
+        },
         headers=headers,
     )
 

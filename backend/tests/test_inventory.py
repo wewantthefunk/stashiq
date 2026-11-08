@@ -1,4 +1,6 @@
-def test_adjust_inventory_creates_audit_log(client, auth_headers, db_session):
+def test_adjust_inventory_creates_audit_log(
+    client, auth_headers, db_session, inventory_action
+):
     headers, user = auth_headers
 
     client.post(
@@ -15,7 +17,12 @@ def test_adjust_inventory_creates_audit_log(client, auth_headers, db_session):
 
     adjust = client.post(
         f"/api/bins/B1/adjust",
-        json={"item_id": item_id, "change_amount": 10, "notes": "Restock"},
+        json={
+            "item_id": item_id,
+            "change_amount": 10,
+            "action_id": inventory_action,
+            "notes": "Extra note",
+        },
         headers=headers,
     )
     assert adjust.status_code == 200
@@ -30,12 +37,14 @@ def test_adjust_inventory_creates_audit_log(client, auth_headers, db_session):
     assert entry["username"] == "coach1@example.com"
     assert entry["bin_name"] == "Gear"
     assert entry["item_name"] == "Cone"
+    assert entry["action_id"] == inventory_action
+    assert entry["action_name"] == "Restock"
     assert entry["change_amount"] == 10
     assert entry["previous_quantity"] == 0
     assert entry["new_quantity"] == 10
 
 
-def test_quantity_cannot_go_below_zero(client, auth_headers):
+def test_quantity_cannot_go_below_zero(client, auth_headers, inventory_action):
     headers, _ = auth_headers
 
     client.post("/api/bins", json={"id": "B1", "name": "Gear"}, headers=headers)
@@ -48,13 +57,21 @@ def test_quantity_cannot_go_below_zero(client, auth_headers):
 
     client.post(
         "/api/bins/B1/adjust",
-        json={"item_id": item_id, "change_amount": 3},
+        json={
+            "item_id": item_id,
+            "change_amount": 3,
+            "action_id": inventory_action,
+        },
         headers=headers,
     )
 
     bad = client.post(
         "/api/bins/B1/adjust",
-        json={"item_id": item_id, "change_amount": -5},
+        json={
+            "item_id": item_id,
+            "change_amount": -5,
+            "action_id": inventory_action,
+        },
         headers=headers,
     )
     assert bad.status_code == 400

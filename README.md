@@ -174,7 +174,7 @@ stashiq/
 │   ├── app/
 │   │   ├── main.py
 │   │   ├── models.py
-│   │   ├── routers/   # auth, bins, items, inventory, logs
+│   │   ├── routers/   # auth, locations, bins, items, inventory, logs
 │   │   └── ...
 │   └── tests/
 └── frontend/          # React coach UI (login, scan, bin stock)
@@ -186,9 +186,11 @@ stashiq/
 |------|-----------|
 | Auth | `POST /api/auth/login`, `GET/POST /api/auth/invite`, `POST /api/auth/change-password`, `POST /api/auth/forgot-password`, `GET /api/auth/me` |
 | Users | `GET/POST /api/users`, `POST /api/users/{id}/resend-invite`, `PATCH/DELETE /api/users/{id}` (admin) |
-| Bins | `GET/POST /api/bins`, `GET /api/bins/{id}`, `GET /api/bins/{id}/qr` |
+| Locations | `GET/POST /api/locations`, `DELETE /api/locations/{id}` |
+| Bins | `GET/POST /api/bins`, `PATCH/DELETE /api/bins/{id}`, `GET /api/bins/{id}`, `GET /api/bins/{id}/qr` (`?location_id=` on list; delete requires empty bin) |
 | Items | `GET/POST /api/items` |
-| Inventory | `POST /api/bins/{id}/adjust` |
+| Actions | `GET/POST /api/actions`, `DELETE /api/actions/{id}` |
+| Inventory | `POST /api/bins/{id}/adjust` (requires `action_id`) |
 | Logs | `GET /api/logs?bin_id=&user_id=` |
 
 New users are invited by **email** (no password on create). They open `/welcome?token=…` from the invite link, set a password, and sign in. Configure `SMTP_*` in `.env` to send invites automatically; otherwise the admin UI shows a copyable link.

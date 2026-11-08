@@ -105,8 +105,14 @@ export function AdminLogsPanel() {
               {entry.bin_name}
             </p>
             <p className="mt-1 text-sm text-slate-500">
-              {entry.username} · {entry.previous_quantity} → {entry.new_quantity}
+              {entry.username} · {entry.previous_quantity} →{" "}
+              {entry.new_quantity}
             </p>
+            {entry.action_name && (
+              <p className="mt-1 text-xs font-medium text-sky-400/90">
+                Action: {entry.action_name}
+              </p>
+            )}
             {entry.notes && (
               <p className="mt-2 text-sm italic text-slate-400">
                 “{entry.notes}”

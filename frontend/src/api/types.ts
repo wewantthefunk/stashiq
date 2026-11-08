@@ -54,9 +54,38 @@ export type UserUpdatePayload = {
   password?: string;
 };
 
+export type InventoryAction = {
+  id: string;
+  name: string;
+};
+
+export type ActionCreate = {
+  id: string;
+  name: string;
+};
+
+export type Location = {
+  id: string;
+  name: string;
+  address: string;
+};
+
+export type LocationCreate = {
+  id: string;
+  name: string;
+  address: string;
+};
+
 export type BinCreate = {
   id: string;
   name: string;
+  location_notes?: string | null;
+  location_id?: string | null;
+};
+
+export type BinUpdate = {
+  location_id?: string | null;
+  name?: string;
   location_notes?: string | null;
 };
 
@@ -69,6 +98,8 @@ export type ItemCreate = {
 export type ItemBinSearchHit = {
   bin_id: string;
   bin_name: string;
+  location_id: string | null;
+  location_name: string | null;
   item: Item;
   quantity: number;
 };
@@ -77,7 +108,10 @@ export type BinSummary = {
   id: string;
   name: string;
   location_notes: string | null;
+  location_id: string | null;
+  location: Location | null;
   updated_at: string;
+  is_empty: boolean;
 };
 
 export type Item = {
@@ -101,6 +135,8 @@ export type InventoryLog = {
   id: string;
   bin_id: string;
   bin_name: string;
+  action_id: string | null;
+  action_name: string | null;
   item_id: string;
   item_name: string;
   user_id: string;
@@ -115,5 +151,6 @@ export type InventoryLog = {
 export type InventoryAdjust = {
   item_id: string;
   change_amount: number;
+  action_id: string;
   notes?: string | null;
 };

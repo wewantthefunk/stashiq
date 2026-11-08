@@ -3,8 +3,26 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import Base, engine, migrate_users_table
-from app.routers import auth, bins, config, inventory, items, logs, search, users
+from app.database import (
+    Base,
+    engine,
+    migrate_bins_table,
+    migrate_inventory_logs_add_action_id,
+    migrate_inventory_logs_drop_bin_fk,
+    migrate_users_table,
+)
+from app.routers import (
+    actions,
+    auth,
+    bins,
+    config,
+    inventory,
+    items,
+    locations,
+    logs,
+    search,
+    users,
+)
 
 app = FastAPI(
     title="StashIQ",
@@ -40,7 +58,9 @@ else:
         allow_headers=["*"],
     )
 
+app.include_router(actions.router)
 app.include_router(auth.router)
+app.include_router(locations.router)
 app.include_router(bins.router)
 app.include_router(items.router)
 app.include_router(inventory.router)
@@ -54,6 +74,9 @@ app.include_router(users.router)
 def on_startup():
     Base.metadata.create_all(bind=engine)
     migrate_users_table()
+    migrate_bins_table()
+    migrate_inventory_logs_add_action_id()
+    migrate_inventory_logs_drop_bin_fk()
 
 
 @app.get("/health")

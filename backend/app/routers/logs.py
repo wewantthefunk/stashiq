@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import Bin, InventoryLog, Item, User
+from app.models import Action, Bin, InventoryLog, Item, User
 from app.schemas import InventoryLogView
 
 router = APIRouter(prefix="/api/logs", tags=["logs"])
@@ -21,10 +21,11 @@ def list_logs(
     limit: Annotated[int, Query(le=500)] = 100,
 ):
     q = (
-        db.query(InventoryLog, User.username, Item.name, Bin.name)
+        db.query(InventoryLog, User.username, Item.name, Bin.name, Action.name)
         .join(User, InventoryLog.user_id == User.id)
         .join(Item, InventoryLog.item_id == Item.id)
-        .join(Bin, InventoryLog.bin_id == Bin.id)
+        .outerjoin(Bin, InventoryLog.bin_id == Bin.id)
+        .outerjoin(Action, InventoryLog.action_id == Action.id)
         .order_by(InventoryLog.timestamp.desc())
     )
     if bin_id:
@@ -37,7 +38,17 @@ def list_logs(
         InventoryLogView(
             id=log.id,
             bin_id=log.bin_id,
-            bin_name=bin_name,
+            bin_name=bin_name or f"{log.bin_id} (removed)",
+            action_id=log.action_id,
+            action_name=(
+                action_name
+                if action_name
+                else (
+                    f"{log.action_id} (removed)"
+                    if log.action_id
+                    else None
+                )
+            ),
             item_id=log.item_id,
             item_name=item_name,
             user_id=log.user_id,
@@ -48,5 +59,5 @@ def list_logs(
             notes=log.notes,
             timestamp=log.timestamp,
         )
-        for log, username, item_name, bin_name in rows
+        for log, username, item_name, bin_name, action_name in rows
     ]

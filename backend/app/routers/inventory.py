@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import Bin, BinContent, InventoryLog, Item, User
+from app.models import Action, Bin, BinContent, InventoryLog, Item, User
 from app.schemas import BinContentRead, InventoryAdjust
 
 router = APIRouter(prefix="/api/bins", tags=["inventory"])
@@ -26,6 +26,19 @@ def adjust_inventory(
     item = db.get(Item, body.item_id)
     if item is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    if body.change_amount == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Change amount must not be zero",
+        )
+
+    action = db.get(Action, body.action_id)
+    if action is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Action not found",
+        )
 
     content = (
         db.query(BinContent)
@@ -49,6 +62,7 @@ def adjust_inventory(
 
     log = InventoryLog(
         bin_id=bin_id,
+        action_id=action.id,
         item_id=body.item_id,
         user_id=user.id,
         change_amount=body.change_amount,

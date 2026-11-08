@@ -29,17 +29,41 @@ class User(Base):
     )
 
 
+class Action(Base):
+    __tablename__ = "actions"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+
+class Location(Base):
+    __tablename__ = "locations"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    address: Mapped[str] = mapped_column(String(512), nullable=False)
+
+    bins: Mapped[list["Bin"]] = relationship(back_populates="location")
+
+
 class Bin(Base):
     __tablename__ = "bins"
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     location_notes: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    location_id: Mapped[str | None] = mapped_column(
+        ForeignKey("locations.id", ondelete="SET NULL"), nullable=True
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    contents: Mapped[list["BinContent"]] = relationship(back_populates="bin")
+    location: Mapped["Location | None"] = relationship(back_populates="bins")
+    contents: Mapped[list["BinContent"]] = relationship(
+        back_populates="bin",
+        cascade="all, delete-orphan",
+    )
 
 
 class Item(Base):
@@ -77,7 +101,9 @@ class InventoryLog(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    bin_id: Mapped[str] = mapped_column(ForeignKey("bins.id"), nullable=False)
+    # No FK — bin may be deleted; bin_id kept for audit history
+    bin_id: Mapped[str] = mapped_column(String(32), nullable=False)
+    action_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     item_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("items.id"), nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     change_amount: Mapped[int] = mapped_column(Integer, nullable=False)

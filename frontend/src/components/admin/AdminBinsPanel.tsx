@@ -1,16 +1,25 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { ApiError, createBin, listBins } from "../../api/client";
-import type { BinSummary } from "../../api/types";
+import {
+  ApiError,
+  createBin,
+  deleteBin,
+  listBins,
+  listLocations,
+  updateBin,
+} from "../../api/client";
+import type { BinSummary, Location } from "../../api/types";
 import { useAuth } from "../../context/AuthContext";
 
 export function AdminBinsPanel() {
   const { token } = useAuth();
   const [bins, setBins] = useState<BinSummary[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [binId, setBinId] = useState("");
   const [name, setName] = useState("");
   const [locationNotes, setLocationNotes] = useState("");
+  const [newBinLocationId, setNewBinLocationId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
@@ -18,12 +27,55 @@ export function AdminBinsPanel() {
 
   async function refresh() {
     if (!token) return;
-    setBins(await listBins(token));
+    const [binRows, locRows] = await Promise.all([
+      listBins(token),
+      listLocations(token),
+    ]);
+    setBins(binRows);
+    setLocations(locRows);
   }
 
   useEffect(() => {
     void refresh().catch(() => setError("Could not load bins."));
   }, [token]);
+
+  async function handleDelete(bin: BinSummary) {
+    if (!token) return;
+    if (!bin.is_empty) return;
+    if (
+      !window.confirm(
+        `Remove bin ${bin.id} (${bin.name})? Its QR code will stop working. Audit history is kept.`,
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    setSuccess(null);
+    try {
+      await deleteBin(bin.id, token);
+      await refresh();
+      setSuccess(`Removed bin ${bin.id}.`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not remove bin.");
+    }
+  }
+
+  async function assignLocation(bin: BinSummary, locationId: string) {
+    if (!token) return;
+    setError(null);
+    try {
+      await updateBin(
+        bin.id,
+        { location_id: locationId || null },
+        token,
+      );
+      await refresh();
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "Could not update location.",
+      );
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -38,12 +90,14 @@ export function AdminBinsPanel() {
           id: binId.trim().toUpperCase(),
           name: name.trim(),
           location_notes: locationNotes.trim() || null,
+          location_id: newBinLocationId || null,
         },
         token,
       );
       setBinId("");
       setName("");
       setLocationNotes("");
+      setNewBinLocationId("");
       setLastCreatedId(created.id);
       await refresh();
       setSuccess(`Created bin ${created.id}.`);
@@ -80,7 +134,21 @@ export function AdminBinsPanel() {
             placeholder="Cones & agility gear"
           />
         </Field>
-        <Field label="Location notes" hint="Optional — van shelf, gym closet…">
+        <Field label="Location" hint="Where this bin lives (Admin → Locations)">
+          <select
+            value={newBinLocationId}
+            onChange={(e) => setNewBinLocationId(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">— None —</option>
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name} ({loc.id})
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Location notes" hint="Optional — shelf, closet…">
           <input
             value={locationNotes}
             onChange={(e) => setLocationNotes(e.target.value)}
@@ -97,15 +165,20 @@ export function AdminBinsPanel() {
       </form>
 
       {error && <Alert tone="error">{error}</Alert>}
-      {success && lastCreatedId && (
+      {success && (
         <Alert tone="success">
-          {success}{" "}
-          <Link
-            to={`/bins/${encodeURIComponent(lastCreatedId)}/label?print=1`}
-            className="font-semibold text-emerald-100 underline"
-          >
-            Print label
-          </Link>
+          {success}
+          {lastCreatedId && (
+            <>
+              {" "}
+              <Link
+                to={`/bins/${encodeURIComponent(lastCreatedId)}/label?print=1`}
+                className="font-semibold text-emerald-100 underline"
+              >
+                Print label
+              </Link>
+            </>
+          )}
         </Alert>
       )}
 
@@ -119,23 +192,61 @@ export function AdminBinsPanel() {
               key={bin.id}
               className="flex items-center justify-between gap-2 rounded-lg border border-slate-800 px-3 py-2"
             >
-              <div className="min-w-0 text-left">
+              <div className="min-w-0 flex-1 text-left">
                 <p className="truncate font-medium text-white">{bin.name}</p>
                 <p className="font-mono text-xs text-amber-300">{bin.id}</p>
+                <label className="mt-2 block text-xs text-slate-500">
+                  Location
+                  <select
+                    value={bin.location_id ?? ""}
+                    onChange={(e) =>
+                      void assignLocation(bin, e.target.value)
+                    }
+                    className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
+                  >
+                    <option value="">— None —</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
-              <div className="flex shrink-0 gap-2">
-                <Link
-                  to={`/bins/${encodeURIComponent(bin.id)}/label`}
-                  className="rounded-lg border border-amber-500/50 px-2 py-1 text-xs text-amber-300"
-                >
-                  Label
-                </Link>
-                <Link
-                  to={`/bins/${encodeURIComponent(bin.id)}`}
-                  className="rounded-lg bg-slate-800 px-2 py-1 text-xs text-slate-200"
-                >
-                  Open
-                </Link>
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <div className="flex gap-2">
+                  <Link
+                    to={`/bins/${encodeURIComponent(bin.id)}/label`}
+                    className="rounded-lg border border-amber-500/50 px-2 py-1 text-xs text-amber-300"
+                  >
+                    Label
+                  </Link>
+                  <Link
+                    to={`/bins/${encodeURIComponent(bin.id)}`}
+                    className="rounded-lg bg-slate-800 px-2 py-1 text-xs text-slate-200"
+                  >
+                    Open
+                  </Link>
+                </div>
+                {bin.is_empty ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete(bin)}
+                    className="rounded-lg border border-red-500/40 px-2 py-1 text-xs text-red-300 hover:border-red-400"
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <span className="max-w-[8rem] text-right text-[10px] leading-tight text-slate-500">
+                    Empty all items before remove —{" "}
+                    <Link
+                      to={`/bins/${encodeURIComponent(bin.id)}`}
+                      className="text-amber-400/90 underline"
+                    >
+                      open bin
+                    </Link>
+                  </span>
+                )}
               </div>
             </li>
           ))}

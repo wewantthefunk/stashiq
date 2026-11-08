@@ -47,6 +47,18 @@ def client(db_session):
 
 
 @pytest.fixture
+def inventory_action(client, auth_headers):
+    headers, _ = auth_headers
+    response = client.post(
+        "/api/actions",
+        json={"id": "RESTOCK", "name": "Restock"},
+        headers=headers,
+    )
+    assert response.status_code == 201
+    return "RESTOCK"
+
+
+@pytest.fixture
 def auth_headers(client, db_session):
     user = User(
         username="coach1@example.com",

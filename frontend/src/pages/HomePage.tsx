@@ -1,30 +1,52 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 
-import { ApiError, listBins, searchItemsInBins } from "../api/client";
-import type { BinSummary, ItemBinSearchHit } from "../api/types";
+import {
+  ApiError,
+  listBins,
+  listLocations,
+  searchItemsInBins,
+} from "../api/client";
+import type { BinSummary, ItemBinSearchHit, Location } from "../api/types";
 import { useAuth } from "../context/AuthContext";
+
+/** null = all locations; "" = unassigned only; otherwise a location id */
+type LocationFilter = string | null;
 
 export function HomePage() {
   const { token } = useAuth();
   const [bins, setBins] = useState<BinSummary[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [locationFilter, setLocationFilter] = useState<LocationFilter>(null);
 
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [hits, setHits] = useState<ItemBinSearchHit[] | null>(null);
 
+  const binsListParam =
+    locationFilter === null ? undefined : locationFilter;
+
+  const reloadBins = useCallback(async () => {
+    if (!token) return;
+    const data = await listBins(token, binsListParam);
+    setBins(data);
+  }, [token, binsListParam]);
+
+  const reloadLocations = useCallback(async () => {
+    if (!token) return;
+    setLocations(await listLocations(token));
+  }, [token]);
+
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
-    listBins(token)
-      .then((data) => {
-        if (!cancelled) setBins(data);
-      })
+    setLoading(true);
+    Promise.all([reloadBins(), reloadLocations()])
       .catch(() => {
-        if (!cancelled) setError("Could not load bins.");
+        if (!cancelled) setError("Could not load data.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -32,7 +54,7 @@ export function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, reloadBins, reloadLocations]);
 
   async function runSearch(term: string) {
     if (!token) return;
@@ -44,8 +66,10 @@ export function HomePage() {
     }
     setSearching(true);
     setSearchError(null);
+    const searchLoc =
+      locationFilter === null ? undefined : locationFilter;
     try {
-      const results = await searchItemsInBins(trimmed, token);
+      const results = await searchItemsInBins(trimmed, token, searchLoc);
       setHits(results);
     } catch (err) {
       setHits([]);
@@ -77,6 +101,27 @@ export function HomePage() {
         <p className="mt-1 text-xs text-slate-500">
           Search by item name — see which bins have it and how many.
         </p>
+        <label className="mt-3 block text-left text-xs text-slate-400">
+          Filter by location
+          <select
+            value={locationFilter ?? "__all__"}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "__all__") setLocationFilter(null);
+              else if (v === "__none__") setLocationFilter("");
+              else setLocationFilter(v);
+            }}
+            className={`${fieldClass} mt-1`}
+          >
+            <option value="__all__">All locations</option>
+            <option value="__none__">Unassigned bins only</option>
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name} ({loc.id})
+              </option>
+            ))}
+          </select>
+        </label>
         <form onSubmit={handleSearch} className="mt-3 flex gap-2">
           <input
             type="search"
@@ -120,6 +165,15 @@ export function HomePage() {
             Item lists · page break after each bin
           </span>
         </Link>
+        <Link
+          to="/locations/print-all?print=1"
+          className="block rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-center text-sm font-medium text-slate-200 hover:border-amber-500/50 sm:col-span-2"
+        >
+          Print bins by location
+          <span className="mt-0.5 block text-xs font-normal text-slate-500">
+            Each location on its own page
+          </span>
+        </Link>
       </div>
 
       <Link
@@ -137,12 +191,16 @@ export function HomePage() {
 
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
-          All bins
+          {locationFilter === null
+            ? "All bins"
+            : locationFilter === ""
+              ? "Unassigned bins"
+              : `Bins at ${locations.find((l) => l.id === locationFilter)?.name ?? locationFilter}`}
         </h2>
         {loading && <p className="text-sm text-slate-500">Loading…</p>}
         {error && <p className="text-sm text-red-300">{error}</p>}
         {!loading && !error && bins.length === 0 && (
-          <p className="text-sm text-slate-500">No bins yet.</p>
+          <p className="text-sm text-slate-500">No bins match this filter.</p>
         )}
         <ul className="space-y-2">
           {bins.map((bin) => (
@@ -157,6 +215,11 @@ export function HomePage() {
                     {bin.id}
                   </span>
                 </div>
+                {bin.location && (
+                  <p className="mt-1 text-left text-xs text-emerald-400/90">
+                    {bin.location.name}
+                  </p>
+                )}
                 {bin.location_notes && (
                   <p className="mt-1 text-left text-sm text-slate-400">
                     {bin.location_notes}
@@ -170,6 +233,9 @@ export function HomePage() {
     </div>
   );
 }
+
+const fieldClass =
+  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-amber-500";
 
 function SearchResults({
   hits,
@@ -216,6 +282,11 @@ function SearchResults({
                     <span className="font-mono text-xs text-slate-500">
                       {hit.bin_id}
                     </span>
+                    {hit.location_name && (
+                      <span className="ml-1 text-xs text-emerald-400/80">
+                        · {hit.location_name}
+                      </span>
+                    )}
                   </span>
                   <span className="text-lg font-bold tabular-nums text-amber-400">
                     {hit.quantity}

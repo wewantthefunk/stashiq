@@ -2,6 +2,9 @@ import type {
   BinCreate,
   BinDetail,
   BinSummary,
+  BinUpdate,
+  Location,
+  LocationCreate,
   InventoryAdjust,
   Item,
   InventoryLog,
@@ -9,7 +12,9 @@ import type {
   ItemCreate,
   PublicConfig,
   AcceptInvitePayload,
+  ActionCreate,
   ChangePasswordPayload,
+  InventoryAction,
   ForgotPasswordResponse,
   InviteVerifyResponse,
   UserCreatePayload,
@@ -151,13 +156,85 @@ export async function login(email: string, password: string) {
   });
 }
 
-export function searchItemsInBins(query: string, token: string) {
-  const q = encodeURIComponent(query.trim());
-  return request<ItemBinSearchHit[]>(`/api/search/items?q=${q}`, {}, token);
+export function searchItemsInBins(
+  query: string,
+  token: string,
+  locationId?: string | null,
+) {
+  const params = new URLSearchParams();
+  params.set("q", query.trim());
+  if (locationId !== undefined && locationId !== null) {
+    params.set("location_id", locationId);
+  }
+  return request<ItemBinSearchHit[]>(
+    `/api/search/items?${params.toString()}`,
+    {},
+    token,
+  );
 }
 
-export function listBins(token: string) {
-  return request<BinSummary[]>("/api/bins", {}, token);
+export function listActions(token: string) {
+  return request<InventoryAction[]>("/api/actions", {}, token);
+}
+
+export function createAction(payload: ActionCreate, token: string) {
+  return request<InventoryAction>("/api/actions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  }, token);
+}
+
+export function deleteAction(actionId: string, token: string) {
+  return request<void>(
+    `/api/actions/${encodeURIComponent(actionId)}`,
+    { method: "DELETE" },
+    token,
+  );
+}
+
+export function listLocations(token: string) {
+  return request<Location[]>("/api/locations", {}, token);
+}
+
+export function createLocation(payload: LocationCreate, token: string) {
+  return request<Location>("/api/locations", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  }, token);
+}
+
+export function deleteLocation(locationId: string, token: string) {
+  return request<void>(
+    `/api/locations/${encodeURIComponent(locationId)}`,
+    { method: "DELETE" },
+    token,
+  );
+}
+
+export function listBins(token: string, locationId?: string | null) {
+  const params = new URLSearchParams();
+  if (locationId !== undefined && locationId !== null) {
+    params.set("location_id", locationId);
+  }
+  const qs = params.toString();
+  return request<BinSummary[]>(`/api/bins${qs ? `?${qs}` : ""}`, {}, token);
+}
+
+export function updateBin(
+  binId: string,
+  payload: BinUpdate,
+  token: string,
+) {
+  return request<BinSummary>(`/api/bins/${encodeURIComponent(binId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  }, token);
+}
+
+export function deleteBin(binId: string, token: string) {
+  return request<void>(`/api/bins/${encodeURIComponent(binId)}`, {
+    method: "DELETE",
+  }, token);
 }
 
 export function createBin(payload: BinCreate, token: string) {

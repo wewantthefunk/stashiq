@@ -15,6 +15,7 @@ import { BinLabelPage } from "./pages/BinLabelPage";
 import { BinInventoryPrintPage } from "./pages/BinInventoryPrintPage";
 import { PrintAllInventoryPage } from "./pages/PrintAllInventoryPage";
 import { PrintAllLabelsPage } from "./pages/PrintAllLabelsPage";
+import { PrintLocationsBinsPage } from "./pages/PrintLocationsBinsPage";
 import { ScanPage } from "./pages/ScanPage";
 
 export default function App() {
@@ -41,6 +42,10 @@ export default function App() {
             <Route
               path="/inventory/print-all"
               element={<PrintAllInventoryPage />}
+            />
+            <Route
+              path="/locations/print-all"
+              element={<PrintLocationsBinsPage />}
             />
             <Route element={<AppShell />}>
               <Route path="/" element={<HomePage />} />
