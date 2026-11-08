@@ -22,6 +22,7 @@ import type {
   UserCreatedResponse,
   UserListEntry,
   UserProfile,
+  UserActivityReport,
   UserUpdatePayload,
 } from "./types";
 
@@ -282,6 +283,21 @@ export function updateItem(
     method: "PATCH",
     body: JSON.stringify(payload),
   }, token);
+}
+
+export function getUserActivityReport(
+  token: string,
+  params: { userId: string; from?: string; to?: string },
+) {
+  const search = new URLSearchParams();
+  search.set("user_id", params.userId);
+  if (params.from) search.set("from", params.from);
+  if (params.to) search.set("to", params.to);
+  return request<UserActivityReport>(
+    `/api/reports/user-activity?${search.toString()}`,
+    {},
+    token,
+  );
 }
 
 export function listLogs(

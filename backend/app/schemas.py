@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
@@ -214,6 +214,20 @@ class ItemBinSearchHit(BaseModel):
     location_name: str | None
     item: ItemRead
     quantity: int
+
+
+class ActionSummaryItem(BaseModel):
+    action: str
+    count: int
+
+
+class UserActivityReport(BaseModel):
+    user_id: UUID
+    username: str
+    from_date: date | None
+    to_date: date | None
+    action_summary: list[ActionSummaryItem]
+    entries: list["InventoryLogView"]
 
 
 class InventoryLogView(BaseModel):

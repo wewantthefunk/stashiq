@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 const baseNav = [
   { to: "/", label: "Home" },
   { to: "/scan", label: "Scan" },
+  { to: "/report", label: "Report" },
   { to: "/account", label: "Account" },
 ];
 

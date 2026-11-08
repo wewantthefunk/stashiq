@@ -68,6 +68,7 @@ def auth_headers(client, db_session):
     )
     db_session.add(user)
     db_session.commit()
+    db_session.refresh(user)
 
     response = client.post(
         "/api/auth/login",

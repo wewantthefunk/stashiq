@@ -20,6 +20,7 @@ from app.routers import (
     items,
     locations,
     logs,
+    reports,
     search,
     users,
 )
@@ -65,6 +66,7 @@ app.include_router(bins.router)
 app.include_router(items.router)
 app.include_router(inventory.router)
 app.include_router(logs.router)
+app.include_router(reports.router)
 app.include_router(config.router)
 app.include_router(search.router)
 app.include_router(users.router)

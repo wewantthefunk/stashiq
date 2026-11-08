@@ -137,6 +137,20 @@ export type BinDetail = BinSummary & {
   contents: BinContent[];
 };
 
+export type ActionSummaryItem = {
+  action: string;
+  count: number;
+};
+
+export type UserActivityReport = {
+  user_id: string;
+  username: string;
+  from_date: string | null;
+  to_date: string | null;
+  action_summary: ActionSummaryItem[];
+  entries: InventoryLog[];
+};
+
 export type InventoryLog = {
   id: string;
   bin_id: string;

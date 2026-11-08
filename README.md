@@ -192,6 +192,7 @@ stashiq/
 | Actions | `GET/POST /api/actions`, `DELETE /api/actions/{id}` |
 | Inventory | `POST /api/bins/{id}/adjust` (requires `action_id`) |
 | Logs | `GET /api/logs?bin_id=&user_id=` |
+| Reports | `GET /api/reports/user-activity?user_id=&from=&to=` |
 
 New users are invited by **email** (no password on create). They open `/welcome?token=…` from the invite link, set a password, and sign in. Configure `SMTP_*` in `.env` to send invites automatically; otherwise the admin UI shows a copyable link.
 

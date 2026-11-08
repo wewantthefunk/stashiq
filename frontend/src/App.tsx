@@ -16,6 +16,7 @@ import { BinInventoryPrintPage } from "./pages/BinInventoryPrintPage";
 import { PrintAllInventoryPage } from "./pages/PrintAllInventoryPage";
 import { PrintAllLabelsPage } from "./pages/PrintAllLabelsPage";
 import { PrintLocationsBinsPage } from "./pages/PrintLocationsBinsPage";
+import { ReportPage } from "./pages/ReportPage";
 import { ScanPage } from "./pages/ScanPage";
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
             <Route element={<AppShell />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/scan" element={<ScanPage />} />
+              <Route path="/report" element={<ReportPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/bins/:binId" element={<BinDetailPage />} />
               <Route element={<AdminRoute />}>
