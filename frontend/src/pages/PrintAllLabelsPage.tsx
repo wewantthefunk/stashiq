@@ -10,6 +10,7 @@ import {
 import type { BinSummary } from "../api/types";
 import { BinLabelCard } from "../components/BinLabelCard";
 import { useAuth } from "../context/AuthContext";
+import { chunkPairs } from "../lib/chunkPairs";
 
 type LabelRow = {
   binId: string;
@@ -138,19 +139,21 @@ export function PrintAllLabelsPage() {
       </div>
 
       <div className="bulk-labels-grid mx-auto max-w-[8.5in] print:max-w-none">
-        {labels.map((row, index) => (
-          <div
-            key={row.binId}
-            className={`bulk-label-slot flex items-center justify-center border border-dashed border-slate-400 bg-white print:border-slate-300 ${
-              index % 2 === 1 ? "bulk-label-page-break" : ""
-            }`}
-          >
-            <BinLabelCard
-              binId={row.binId}
-              name={row.name}
-              qrUrl={row.qrUrl}
-              scanUrl={row.scanUrl}
-            />
+        {chunkPairs(labels).map((sheet, sheetIndex) => (
+          <div key={sheetIndex} className="bulk-label-sheet">
+            {sheet.map((row) => (
+              <div
+                key={row.binId}
+                className="bulk-label-slot flex items-center justify-center border border-dashed border-slate-400 bg-white print:border-slate-300"
+              >
+                <BinLabelCard
+                  binId={row.binId}
+                  name={row.name}
+                  qrUrl={row.qrUrl}
+                  scanUrl={row.scanUrl}
+                />
+              </div>
+            ))}
           </div>
         ))}
       </div>

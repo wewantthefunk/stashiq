@@ -35,17 +35,48 @@ body {
     page: label-letter;
   }
 
-  .bulk-label-slot {
-    min-height: 5.1in;
-    page-break-inside: avoid;
-  }
-
-  .bulk-label-page-break {
+  /*
+   * Two labels per letter sheet: fixed sheet height (11in − 2×0.35in margins).
+   * Pairing is done in markup (.bulk-label-sheet), not page-break-after on
+   * every other slot — variable card height (long URLs/names in prod) was
+   * pushing the second slot to the next page after the first few sheets.
+   */
+  .bulk-label-sheet {
+    box-sizing: border-box;
+    height: 10.3in;
+    display: flex;
+    flex-direction: column;
     page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid-page;
   }
 
-  .bulk-labels-grid .bulk-label-slot:last-child {
+  .bulk-labels-grid .bulk-label-sheet:last-child {
     page-break-after: auto;
+    break-after: auto;
+  }
+
+  .bulk-label-sheet--single {
+    height: auto;
+    min-height: 5.1in;
+  }
+
+  .bulk-label-slot {
+    box-sizing: border-box;
+    flex: 1 1 0;
+    min-height: 0;
+    height: 5.15in;
+    max-height: 5.15in;
+    overflow: hidden;
+    page-break-inside: avoid;
+    break-inside: avoid-page;
+  }
+
+  .bulk-label-sheet--single .bulk-label-slot {
+    flex: none;
+    height: 5.1in;
+    max-height: 5.1in;
   }
 
   /* Bin inventory lists (letter) */

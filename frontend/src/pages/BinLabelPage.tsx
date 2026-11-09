@@ -98,13 +98,15 @@ export function BinLabelPage() {
       </div>
 
       <div className="bulk-labels-grid mx-auto max-w-[8.5in] print:max-w-none">
-        <div className="bulk-label-slot flex items-center justify-center border border-dashed border-slate-400 bg-white print:border-slate-300">
-          <BinLabelCard
-            binId={bin.id}
-            name={bin.name}
-            qrUrl={qrUrl}
-            scanUrl={scanUrl}
-          />
+        <div className="bulk-label-sheet bulk-label-sheet--single">
+          <div className="bulk-label-slot flex items-center justify-center border border-dashed border-slate-400 bg-white print:border-slate-300">
+            <BinLabelCard
+              binId={bin.id}
+              name={bin.name}
+              qrUrl={qrUrl}
+              scanUrl={scanUrl}
+            />
+          </div>
         </div>
       </div>
     </div>
