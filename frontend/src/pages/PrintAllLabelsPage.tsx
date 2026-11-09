@@ -11,6 +11,7 @@ import type { BinSummary } from "../api/types";
 import { BinLabelCard } from "../components/BinLabelCard";
 import { useAuth } from "../context/AuthContext";
 import { chunkPairs } from "../lib/chunkPairs";
+import { isFirefox } from "../lib/isFirefox";
 
 type LabelRow = {
   binId: string;
@@ -81,7 +82,7 @@ export function PrintAllLabelsPage() {
     if (searchParams.get("print") !== "1" || loading || labels.length === 0) {
       return;
     }
-    const timer = window.setTimeout(() => window.print(), 500);
+    const timer = window.setTimeout(() => window.print(), 1200);
     return () => window.clearTimeout(timer);
   }, [searchParams, loading, labels.length]);
 
@@ -116,8 +117,16 @@ export function PrintAllLabelsPage() {
   }
 
   return (
-    <div className="bulk-labels-print label-page min-h-dvh bg-slate-200 print:bg-white">
-      <div className="no-print mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-2 p-4">
+    <div className="bulk-labels-print label-page min-h-dvh bg-slate-200 print:min-h-0 print:bg-white">
+      <div className="no-print mx-auto max-w-2xl space-y-2 p-4">
+        {isFirefox() && (
+          <p className="rounded-lg border border-amber-600/50 bg-amber-950/40 px-3 py-2 text-xs text-amber-100">
+            Firefox’s print engine often breaks 2-up label pages. For correct
+            layout, use Chrome or Brave, or print to PDF from Chrome and send
+            that to the printer.
+          </p>
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-slate-700">
           {labels.length} label{labels.length === 1 ? "" : "s"} · 2 per page
         </p>
@@ -136,15 +145,25 @@ export function PrintAllLabelsPage() {
             Print all
           </button>
         </div>
+        </div>
       </div>
 
       <div className="bulk-labels-grid mx-auto max-w-[8.5in] print:max-w-none">
         {chunkPairs(labels).map((sheet, sheetIndex) => (
-          <div key={sheetIndex} className="bulk-label-sheet">
-            {sheet.map((row) => (
+          <div
+            key={sheetIndex}
+            className={
+              sheet.length === 1
+                ? "bulk-label-sheet bulk-label-sheet--single"
+                : "bulk-label-sheet"
+            }
+          >
+            {sheet.map((row, slotIndex) => (
               <div
                 key={row.binId}
-                className="bulk-label-slot flex items-center justify-center border border-dashed border-slate-400 bg-white print:border-slate-300"
+                className={`bulk-label-slot flex items-center justify-center border border-dashed border-slate-400 bg-white print:border-slate-300 ${
+                  slotIndex === 0 ? "bulk-label-slot--top" : "bulk-label-slot--bottom"
+                }`}
               >
                 <BinLabelCard
                   binId={row.binId}

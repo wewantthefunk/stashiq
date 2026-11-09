@@ -19,7 +19,7 @@ describe("chunkPairs", () => {
     expect(chunkPairs([])).toEqual([]);
   });
 
-  it("uses even pairs for sheet count (regression: per-index page breaks)", () => {
+  it("assigns two slots per sheet for print pagination", () => {
     const n = 37;
     const labels = Array.from({ length: n }, (_, i) => `B${i}`);
     const sheets = chunkPairs(labels);

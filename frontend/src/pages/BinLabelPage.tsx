@@ -10,6 +10,7 @@ import {
 import { BinLabelCard } from "../components/BinLabelCard";
 import type { BinDetail } from "../api/types";
 import { useAuth } from "../context/AuthContext";
+import { isFirefox } from "../lib/isFirefox";
 
 export function BinLabelPage() {
   const { binId = "" } = useParams();
@@ -80,8 +81,15 @@ export function BinLabelPage() {
   }
 
   return (
-    <div className="bulk-labels-print label-page min-h-dvh bg-slate-200 print:bg-white">
-      <div className="no-print mx-auto flex max-w-2xl justify-end gap-2 p-4">
+    <div className="bulk-labels-print label-page min-h-dvh bg-slate-200 print:min-h-0 print:bg-white">
+      <div className="no-print mx-auto max-w-2xl space-y-2 p-4">
+        {isFirefox() && (
+          <p className="rounded-lg border border-amber-600/50 bg-amber-950/40 px-3 py-2 text-xs text-amber-100">
+            For reliable label printing, Chrome or Brave is recommended over
+            Firefox.
+          </p>
+        )}
+        <div className="flex justify-end gap-2">
         <Link
           to={`/bins/${encodeURIComponent(binId)}`}
           className="rounded-lg border border-slate-400 bg-white px-3 py-2 text-sm text-slate-800"
@@ -95,11 +103,12 @@ export function BinLabelPage() {
         >
           Print label
         </button>
+        </div>
       </div>
 
       <div className="bulk-labels-grid mx-auto max-w-[8.5in] print:max-w-none">
         <div className="bulk-label-sheet bulk-label-sheet--single">
-          <div className="bulk-label-slot flex items-center justify-center border border-dashed border-slate-400 bg-white print:border-slate-300">
+          <div className="bulk-label-slot bulk-label-slot--top flex items-center justify-center border border-dashed border-slate-400 bg-white print:border-slate-300">
             <BinLabelCard
               binId={bin.id}
               name={bin.name}

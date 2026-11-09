@@ -12,6 +12,13 @@ body {
 }
 
 @media print {
+  html,
+  body,
+  #root {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
   body {
     background: white !important;
     color: black !important;
@@ -23,33 +30,33 @@ body {
 
   .label-page {
     background: white !important;
+    min-height: 0 !important;
+    height: auto !important;
   }
 
-  /* Bin QR labels: 2 per 8.5×11 sheet (cut horizontally); single-bin uses same slot size */
-  @page label-letter {
+  .bulk-labels-print {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  /* One @page rule — named pages were unreliable in Chrome after ~2 sheets */
+  @page {
     size: letter;
     margin: 0.35in;
   }
 
-  .bulk-labels-print {
-    page: label-letter;
-  }
-
   /*
-   * Two labels per letter sheet: fixed sheet height (11in − 2×0.35in margins).
-   * Pairing is done in markup (.bulk-label-sheet), not page-break-after on
-   * every other slot — variable card height (long URLs/names in prod) was
-   * pushing the second slot to the next page after the first few sheets.
+   * Two labels per sheet: absolute halves inside a fixed 10.1in block
+   * (slightly under 11in − margins) so content never spills to a third page.
    */
   .bulk-label-sheet {
+    position: relative;
     box-sizing: border-box;
-    height: 10.3in;
-    display: flex;
-    flex-direction: column;
+    width: 100%;
+    height: 10.1in;
+    overflow: hidden;
     page-break-after: always;
     break-after: page;
-    page-break-inside: avoid;
-    break-inside: avoid-page;
   }
 
   .bulk-labels-grid .bulk-label-sheet:last-child {
@@ -58,35 +65,95 @@ body {
   }
 
   .bulk-label-sheet--single {
-    height: auto;
-    min-height: 5.1in;
+    height: 5.05in;
   }
 
   .bulk-label-slot {
+    position: absolute;
+    left: 0;
+    right: 0;
     box-sizing: border-box;
-    flex: 1 1 0;
-    min-height: 0;
-    height: 5.15in;
-    max-height: 5.15in;
+    height: 5.05in;
     overflow: hidden;
-    page-break-inside: avoid;
-    break-inside: avoid-page;
+  }
+
+  .bulk-label-slot--top {
+    top: 0;
+  }
+
+  .bulk-label-slot--bottom {
+    top: 5.05in;
   }
 
   .bulk-label-sheet--single .bulk-label-slot {
-    flex: none;
-    height: 5.1in;
-    max-height: 5.1in;
+    top: 0;
   }
 
-  /* Bin inventory lists (letter) */
-  @page inventory-list {
-    size: letter;
-    margin: 0.6in;
+  .label-card {
+    padding: 0.12in !important;
+    max-height: 5.05in;
   }
 
+  .label-card-qr {
+    height: 1.5in !important;
+    width: 1.5in !important;
+    margin-top: 0.1in !important;
+  }
+
+  .label-card-name {
+    font-size: 0.95rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .label-card-id {
+    font-size: 1.5rem !important;
+  }
+
+  .label-card-url {
+    font-size: 7px !important;
+  }
+
+  /*
+   * Firefox paginates print layout differently from Chromium (absolute halves
+   * collapse to one label per page after ~2 sheets). Use stacked blocks.
+   */
+  @supports (-moz-appearance: none) {
+    .bulk-label-sheet {
+      position: static;
+      display: block;
+      height: auto;
+      overflow: visible;
+      break-after: auto;
+      page-break-inside: avoid;
+      -moz-column-break-inside: avoid;
+    }
+
+    .bulk-label-sheet--single {
+      height: auto;
+    }
+
+    .bulk-label-slot {
+      position: static;
+      display: block;
+      height: 5.05in;
+      max-height: 5.05in;
+      overflow: hidden;
+      page-break-inside: avoid;
+      -moz-column-break-inside: avoid;
+    }
+
+    .bulk-label-slot--top {
+      page-break-after: avoid;
+    }
+
+    .bulk-label-slot--bottom {
+      page-break-before: avoid;
+    }
+  }
+
+  /* Bin inventory lists — padding instead of a second named @page */
   .inventory-print-page {
-    page: inventory-list;
+    padding: 0.25in 0;
   }
 
   .bin-inventory-page-break {
@@ -119,8 +186,19 @@ body {
 }
 
 @media screen {
+  .bulk-label-sheet {
+    position: static;
+    height: auto;
+    overflow: visible;
+    margin-bottom: 1.5rem;
+  }
+
   .bulk-label-slot {
+    position: static;
     min-height: 14rem;
+    height: auto;
+    max-height: none;
     margin-bottom: 1rem;
+    overflow: visible;
   }
 }

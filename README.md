@@ -86,6 +86,8 @@ Log in with form data at `POST /api/auth/login` (`username`, `password`) to rece
 
 Set **`PUBLIC_URL`** in `.env` for bin QR codes (e.g. `https://stashiq-test.wewantthefunk.top`). This overrides `FRONTEND_BASE_URL` for deep links. `FRONTEND_BASE_URL` stays for local/LAN access. Print from **Admin → Bins → Label** or `/bins/{id}/label`.
 
+**Printing QR labels (2 per page):** Use **Chrome or Brave**. Firefox’s print layout engine often paginates one label per page after the first sheet; the app shows a warning in Firefox. Workaround: open the same print URL in Chrome, save PDF, then print the PDF.
+
 ### Frontend only (local dev)
 
 ```bash
